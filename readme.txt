@@ -19,10 +19,10 @@ This tarball contains:
 
 Instructions:
 In the proper folder, run the following commands:
-1. $make            //creates executable
-2. $make run        //execute
-3. $make val        //execute with valgrind for memory check
-4. $make clean      //cleans directory
+~ $make            //creates executable
+~ $make run        //execute
+~ $make val        //execute with valgrind for memory check
+~ $make clean      //cleans directory
 
 Specifications:
 ~ The chosen IPC way is, like the previous assignment, shared memory (as dictated), which is handled using semaphores.
