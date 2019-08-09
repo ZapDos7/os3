@@ -5,6 +5,8 @@
 #include <unistd.h>
 
 #include "shm.h"
+#include "Semun.h"
+#include "hashtable.h"
 
 int main (int argc, char*argv[]) {
     if (argc!=2) {
