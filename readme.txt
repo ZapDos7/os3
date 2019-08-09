@@ -4,6 +4,11 @@ Ioanna Zapalidi
 Operating Systems
 Winter Semester 2018-19
 
+What was used:
+~ C
+~ Makefile
+~ Ubuntu 18.04 environment, using terminal commands & VS Code as the editor.
+
 This tarball contains:
 ~ this readme
 ~ main.c

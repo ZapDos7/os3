@@ -46,7 +46,7 @@ void HTdestroy(HT* ht) {
 	free(ht);
 }
 //my hash function is MD5
-int HThash(char * s) {
+/* int HThash(char * s) {
 	long hash = 0;
 	int a = 151; int m = 50;
 	const int len_s = strlen(s);
@@ -55,7 +55,7 @@ int HThash(char * s) {
         hash = hash % m;
     }
     return (int)hash;
-}
+}*/
 
 void HTinsert(node nd, int key, HT* ht) {
 	char * s;
