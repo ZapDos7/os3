@@ -7,11 +7,14 @@
 
 typedef enum { false, true } bool;
 
-typedef struct trace { //data structure of shared memory
+typedef struct msg { //data structure of shared memory
 	int pid;
-	char * msg;
-} trace;
+	char * line;
+} msg;
 
-
+int shm_create(key_t keyt);
+msg* shm_attach(int shm_id);
+int shm_detach(msg * shm_ptr);
+int shm_delete(int shm_id);
 
 #endif
