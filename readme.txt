@@ -8,6 +8,7 @@ This tarball contains:
 ~ this readme
 ~ main.c
 ~ Makefile
+~ shm.c & shm.h (files about shared memory from previous project)
 
 Instructions:
 In the proper folder, run the following commands:
