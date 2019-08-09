@@ -4,7 +4,13 @@
 #include <openssl/md5.h>
 #include <unistd.h>
 
-int main (void) {
-
-    return 0;
+int main (int argc, char*argv[]) {
+    if (argc!=2) {
+        fprintf(stderr, "Incorrect amount of arguements, please fix this issue and start again.\n");
+        exit(-1);
+    }
+    
+    int pnum = atoi(argv[1]);
+    //printf("%d\n", pnum);
+    exit(0);
 }

@@ -13,4 +13,5 @@ Instructions:
 In the proper folder, run the following commands:
 1. $make            //creates executable
 2. $make run        //execute
-3. $make clean      //cleans directory
+3. $make val        //execute with valgrind for memory check
+4. $make clean      //cleans directory
