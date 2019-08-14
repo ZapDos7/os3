@@ -8,7 +8,7 @@
 typedef enum { false, true } bool;
 
 typedef struct msg { //data structure of shared memory
-	int pid;
+	pid_t pid;
 	char * line;
 } msg;
 
