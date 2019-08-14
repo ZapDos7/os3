@@ -6,7 +6,6 @@
 
 #include "shm.h"
 #include "Semun.h"
-#include "hashtable.h"
 
 int main (int argc, char*argv[]) {
     int pnum;
@@ -28,8 +27,25 @@ int main (int argc, char*argv[]) {
     printf("%d\n", pnum);
     
     //create shared memory
+    //handle semaphores
 
-    //fork
+    int pids[pnum+2]; //table of pids returned by fork, one is C, the rest are P + 1 for parent
+
+    for (int i = 0; i < pnum+2; i++) {
+        pids[i] = fork();    //fork
+        if (pids[i]==0) {
+            printf("My id is %d. I am parent.\n", getpid());
+        } 
+        else if (pids[i]>0) {
+            printf("My id is %d. I am child.\n", getpid());
+        }
+        else {
+            fprintf(stderr, "How and why\n");
+            exit(-1);
+        }
+    }
+    
+
     //the N Ps: read file
     //send struct into in-ds
     //the C: read & hash
