@@ -5,7 +5,7 @@ make:
 	gcc -Wall -g main.o shm.o Semun.o -o main
 
 run:
-	./main 1
+	./main 1 randomfile.txt
 
 val:
 	valgrind --leak-check=yes ./main 1
