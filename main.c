@@ -41,24 +41,30 @@ int main (int argc, char*argv[]) {
 	}
 	shm_id = shm_create(shm_key);
 ///////////////////handle semaphores/////////////////////
-
+    int sem_key = rand(); //yolo
+	int mutex=1;
+    /*win,wout,rin,rout?*/
+    int full=0;
+    int empty=1; //or N???
 //////////////////////fork time//////////////////////////
     int pids[pnum+2]; //table of pids returned by fork, 1 is C, the rest are P, + 1 for parent
-
     for (int i = 0; i < pnum+2; i++) {
         pids[i] = fork();    //fork
+///////////////////parent////////////////////////////////
         if (pids[i]==0) {
             printf("My id is %d. I am parent.\n", getpid());
             //handle children
             //kill children
         } 
         else if (pids[i]>0) {
-            if(i==0) { //C
+/////////////////////////C////////////////////////////////
+            if(i==0) { 
                 printf("My id is %d. I am child. I am C.\n", getpid());
                 //the C: read & hash
                 //send back to out-ds
             }
             else {
+/////////////////////////P////////////////////////////////
                 printf("My id is %d. I am child.I am P%d\n", getpid(), i);
                 //the N Ps: read file
                 
@@ -75,7 +81,7 @@ int main (int argc, char*argv[]) {
         }
     }
     
-    
+////////////////////////end//////////////////////////////    
     //print finishing message
 
     exit(0);
