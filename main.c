@@ -3,22 +3,25 @@
 #include <string.h>
 #include <openssl/md5.h>
 #include <unistd.h>
+#include <sys/shm.h>
+#include <sys/wait.h>
 
 #include "shm.h"
 #include "Semun.h"
 
 int main (int argc, char*argv[]) {
+///////////////initialize//////////////
     int pnum;
-    char * filename;
-    if (argc>4) {
+    FILE * fptr;
+    if (argc>3) {
         fprintf(stderr, "Incorrect amount of arguements, please fix this issue and start again.\n");
         exit(-1);
     }
-    else if (argc==3) {
-        pnum = atoi(argv[1]);
-        filename = argv[2];
-    }
     else if (argc==2) {
+        pnum = atoi(argv[1]);
+        fptr = fopen("randomfile.txt", "r");
+    }
+    else if (argc==1) {
         pnum = 5; //default value
     }
     else {
@@ -26,32 +29,21 @@ int main (int argc, char*argv[]) {
         exit(-1);
     }
     printf("%d\n", pnum);
-    printf("%s\n", filename);
-
-    //file reading -> into a buffer for the Ps
-    char * buf = 0;
-    long length;
-    FILE * f = fopen (filename, "rb");
-    int errno;
-    if (f) {
-        int val = fseek (f, 0, SEEK_END);//check the error-code
-        if(val!=0) {
-            //val=errno;
-            fprintf(stderr, "Error code for fseek(1) is %d\n",val);
-        }
-        length = ftell (f);
-        fseek (f, 0, SEEK_SET);//check the error-code
-        buf = malloc (length);
-        if (buf) {
-            fread (buf, 1, length, f);//check the error-code
-        }
-        fclose (f);//check the error-code
+    if (fptr == NULL) {
+        fprintf(stderr, "Can't find input file file!\n");
+		exit(-1);
     }
-    
-    //create shared memory
-    //handle semaphores
+///////////////create shared memory//////////////////////
+    int shm_id, shm_key;
+    if ((shm_key = ftok("main.c", 'O')) == -1) {//lab
+	    fprintf(stderr,"Shm key error.\n");
+	    exit(-1);
+	}
+	shm_id = shm_create(shm_key);
+///////////////////handle semaphores/////////////////////
 
-    int pids[pnum+2]; //table of pids returned by fork, one is C, the rest are P + 1 for parent
+//////////////////////fork time//////////////////////////
+    int pids[pnum+2]; //table of pids returned by fork, 1 is C, the rest are P, + 1 for parent
 
     for (int i = 0; i < pnum+2; i++) {
         pids[i] = fork();    //fork
@@ -69,9 +61,7 @@ int main (int argc, char*argv[]) {
             else {
                 printf("My id is %d. I am child.I am P%d\n", getpid(), i);
                 //the N Ps: read file
-                if (buf) {
-                    //read();
-                }
+                
 
                 //send struct into in-ds
 
