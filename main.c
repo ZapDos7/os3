@@ -54,14 +54,14 @@ int main (int argc, char*argv[]) {
     int ppcount=0;//posa tupwthikan apo to idio P
 //////////////////////fork time//////////////////////////
     int pid;
-    for (int i = 0; i < pnum+1; i++) {
+    for (int i = 0; i < pnum; i++) {
         pid = fork();//fork
         if (pid == -1) {
 			fprintf(stderr, "Error! Fork failure.\n");
 			exit(-1);
         }
 /////////////////////////C///////////////////////////////
-        else if (pid==0) {
+        else if (pid!=0) {
             printf("My id is %d. I am parent.I am C.\n", getpid());
             //handle children - wait
             //the C: read & hash
@@ -69,7 +69,7 @@ int main (int argc, char*argv[]) {
             //kill children
         }
 /////////////////////////P///////////////////////////////
-        else if (pid>0) {
+        else if (pid==0) {
             printf("My id is %d. I am child.I am P%d\n", getpid(), i);
             //the N Ps: read file
             msg * shm_ptr; //init shared memory of msg size
