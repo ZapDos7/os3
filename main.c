@@ -47,10 +47,12 @@ int main (int argc, char*argv[]) {
 	shm_id = shm_create(shm_key);
 ///////////////////handle semaphores/////////////////////
     int sem_key = rand(); //yolo
-	int mutex=sem_create(sem_key,1,0);
-    /*win,wout,rin,rout?*/
-    int full=sem_create(sem_key,1,0);
-    int empty=sem_create(sem_key,1,0); //or N???
+	int mutexin=sem_create(sem_key,1,0);
+    int mutexout=sem_create(sem_key,1,0);
+    int fullin=sem_create(sem_key,1,0);
+    int emptyin=sem_create(sem_key,1,0); //or N???
+    int fullout=sem_create(sem_key,1,0);
+    int emptyout=sem_create(sem_key,1,0); //or N???
 /////////////////////counters////////////////////////////
     int ppcount=0;//posa tupwthikan apo to idio P
 //////////////////////fork time//////////////////////////
