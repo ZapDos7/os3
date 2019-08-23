@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <openssl/md5.h>
+//#include <openssl/md5.h>
+//gcc md5.c -o md5 -lssl
 #include <unistd.h>
 #include <sys/shm.h>
 #include <sys/wait.h>
