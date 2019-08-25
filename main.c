@@ -45,6 +45,7 @@ int main (int argc, char*argv[]) {
 	    exit(-1);
 	}
 	shm_id = shm_create(shm_key);
+    //size = 2*struct!!!
 ///////////////////handle semaphores/////////////////////
     int sem_key = rand(); //yolo
 	int mutexin=sem_create(sem_key,1,0);
