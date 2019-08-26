@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <openssl/md5.h>
-//gcc md5.c -o md5 -lssl
+#include <openssl/md5.h>
 #include <unistd.h>
 #include <sys/shm.h>
 #include <sys/wait.h>
@@ -13,6 +12,8 @@
 #include "shm.h"
 #include "Semun.h"
 
+//#define MD5_DIGEST_LENGTH 16;
+#define AES_BLOCK_SIZE 16
 int main (int argc, char*argv[]) {
 ///////////////initialize//////////////
     int pnum;
@@ -48,14 +49,27 @@ int main (int argc, char*argv[]) {
     //size = 2*struct!!!
 ///////////////////handle semaphores/////////////////////
     int sem_key = rand(); //yolo
-	int mutexin=sem_create(sem_key,1,0);
-    int mutexout=sem_create(sem_key,1,0);
+	int mutex=sem_create(sem_key,1,0);
     int fullin=sem_create(sem_key,1,0);
-    int emptyin=sem_create(sem_key,1,0); //or N???
+    //int emptyin=sem_create(sem_key,1,0); //or N???
     int fullout=sem_create(sem_key,1,0);
-    int emptyout=sem_create(sem_key,1,0); //or N???
+    //int emptyout=sem_create(sem_key,1,0); //or N???
 /////////////////////counters////////////////////////////
     int ppcount=0;//posa tupwthikan apo to idio P
+//////////////////md5 stuff//////////////////////////////
+    
+    unsigned char digest[MD5_DIGEST_LENGTH];
+    char string[] = "happy go lucky o so happy and lucky";
+    MD5((unsigned char*)&string, strlen(string), (unsigned char*)&digest);    
+
+    char mdString[33];
+
+    for(int i = 0; i < 16; i++)
+         sprintf(&mdString[i*2], "%02x", (unsigned int)digest[i]);
+
+    printf("md5 digest: %s\n", mdString);
+
+    return 0;
 //////////////////////fork time//////////////////////////
     int pid;
     for (int i = 0; i < pnum; i++) {
