@@ -14,4 +14,8 @@ void print_md5_sum(unsigned char* md);
 
 // Get the size of the file by its file descriptor
 unsigned long get_size_by_fd(int fd);
+
+//random line selector?
+
+//read file?
 #endif

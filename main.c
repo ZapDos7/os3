@@ -15,18 +15,21 @@
 
 int main (int argc, char*argv[]) {
 ///////////////initialize//////////////
-    int pnum;
+    printf("1st arguement is number of P processes, 2nd arguement is number of repetitions.\nDefault values: Pnum = 5, k = 10");
+    int pnum, k;
     FILE * fptr;
-    if (argc>3) {
+    if (argc>4) {
         fprintf(stderr, "Incorrect amount of arguements, please fix this issue and start again.\n");
         exit(-1);
     }
-    else if (argc==2) {
+    else if (argc==3) {
         pnum = atoi(argv[1]);
+        k = atoi(argv[2]);
         fptr = fopen("randomfile.txt", "r");
     }
-    else if (argc==1) {
+    else if (argc==2) {
         pnum = 5; //default value
+        k = 10; //default value
         fptr = fopen("randomfile.txt", "r");
     }
     else {
@@ -45,7 +48,8 @@ int main (int argc, char*argv[]) {
 	    exit(-1);
 	}
 	shm_id = shm_create(shm_key);
-    //size = 2*struct!!!
+    //size = 2*struct!!! 1:in-ds, 1:out-ds
+    //or queue? or queue in C?
 ///////////////////handle semaphores/////////////////////
     int sem_key = rand(); //yolo
 	int mutex=sem_create(sem_key,1,0);
@@ -54,10 +58,10 @@ int main (int argc, char*argv[]) {
     int fullout=sem_create(sem_key,1,0);
     //int emptyout=sem_create(sem_key,1,0); //or N???
 /////////////////////counters////////////////////////////
-    int ppcount=0;//posa tupwthikan apo to idio P
+    int ppcount=0;//posa tupwthikan apo to idio P, pollapla instances!!
 //////////////////md5 stuff//////////////////////////////
     
-    unsigned char digest[MD5_DIGEST_LENGTH]; //resulting hash
+    unsigned char digest[MD5_DIGEST_LENGTH]; //resulting hash, length=16 predefined
     char string[] = "happy go lucky o so happy and lucky";
     MD5((unsigned char*)&string, strlen(string), (unsigned char*)&digest);    
 
@@ -83,6 +87,8 @@ int main (int argc, char*argv[]) {
             //handle children - wait
             //the C: read & hash
             //send back to out-ds
+            //inform children that it is all over, k is done
+            //read all ppcounter, sum & print
             //kill children
         }
 /////////////////////////P///////////////////////////////
@@ -92,9 +98,12 @@ int main (int argc, char*argv[]) {
             msg * shm_ptr; //init shared memory of msg size
             shm_ptr = shm_attach(shm_id); //attach to shared memory
             //send struct into in-ds
+            //WAIT - semaphore stuff - while i have sent a message, i wait
+            //when i get one back i send the next
             //read if out-ds is readable
             //print stuff and update counters
             //if idio Ppid = Ppid: ppcounter++;
+            //send ppcounter to C
         }
         else {//useless else but you can never know with these magic stuff!
             fprintf(stderr, "How and why\n");
