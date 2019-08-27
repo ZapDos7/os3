@@ -11,9 +11,8 @@
 
 #include "shm.h"
 #include "Semun.h"
+#include "help.h"
 
-//#define MD5_DIGEST_LENGTH 16;
-#define AES_BLOCK_SIZE 16
 int main (int argc, char*argv[]) {
 ///////////////initialize//////////////
     int pnum;
@@ -58,7 +57,7 @@ int main (int argc, char*argv[]) {
     int ppcount=0;//posa tupwthikan apo to idio P
 //////////////////md5 stuff//////////////////////////////
     
-    unsigned char digest[MD5_DIGEST_LENGTH];
+    unsigned char digest[MD5_DIGEST_LENGTH]; //resulting hash
     char string[] = "happy go lucky o so happy and lucky";
     MD5((unsigned char*)&string, strlen(string), (unsigned char*)&digest);    
 
@@ -69,7 +68,7 @@ int main (int argc, char*argv[]) {
 
     printf("md5 digest: %s\n", mdString);
 
-    return 0;
+
 //////////////////////fork time//////////////////////////
     int pid;
     for (int i = 0; i < pnum; i++) {
