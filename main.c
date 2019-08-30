@@ -42,18 +42,36 @@ int main (int argc, char*argv[]) {
     }
     fprintf(stdout, "Given numbers:\nP is %d\nK is %d.\n", pnum, k);
 ////////////////////file handling////////////////////////
-    if (fptr) {
+    /*if (fptr) {
         fseek(fptr, 0, SEEK_END);
         long fsize = ftell(fptr);
         fseek(fptr, 0, SEEK_SET);
 
         char *buffer = malloc(fsize + 1);
         if (buffer) {
-            /*fsize =*/ fread(buffer, 1, fsize, fptr);
+            //fsize = fread(buffer, 1, fsize, fptr);
+            fread(buffer, 1, fsize, fptr);
         }
         fclose(fptr);
     }
-    //file contents in buffer so after fork all P's will have that, not very good memorywise but it's faster than N* read and write
+    //file contents in buffer so after fork all P's will have that, not very good memorywise but it's faster than N* read and write*/
+    char *line_buf = NULL;
+    size_t line_buf_size = 0;
+    int line_count = 0;
+    ssize_t line_size;
+    line_size = getline(&line_buf, &line_buf_size, fptr);
+    while (line_size >= 0)  {
+        line_count++;
+        //save in buffer
+
+        line_size = getline(&line_buf, &line_buf_size, fptr); //next line
+    }
+    free(line_buf);
+    line_buf = NULL;
+
+    fclose(fptr);
+
+
 ///////////////create shared memory//////////////////////
     int shm_id, shm_key;
     if ((shm_key = ftok("main.c", 'O')) == -1) {//lab
@@ -84,10 +102,11 @@ int main (int argc, char*argv[]) {
             //handle children - wait
             //the C: read & hash
             //send back to out-ds
-            //inform children that it is all over, k is done
+            //if K times
+            //inform children that it is all over, k is done - signal?
             int sumppcount=0;
             //read all ppcounter[], sum & print
-            fprintf(stdout, "Finished execution, %d times the printed message was from the same process ID.\n", sumppcount);
+            fprintf(stdout, "Finished execution with %d P processes and %d repetitions, %d times the printed message was from the same process ID.\n", pnum, k, sumppcount);
             //kill children
         }
 /////////////////////////P///////////////////////////////
