@@ -1,5 +1,5 @@
 #include "help.h"
-
+/*
 // Print the MD5 sum as hex-digits.
 void print_md5_sum(unsigned char* md) {
     int i;
@@ -14,3 +14,4 @@ unsigned long get_size_by_fd(int fd) {
     if(fstat(fd, &statbuf) < 0) exit(-1);
     return statbuf.st_size;
 }
+*/

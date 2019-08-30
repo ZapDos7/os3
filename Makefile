@@ -7,10 +7,10 @@ make:
 	gcc -Wall -g main.o shm.o Semun.o help.o -o main -lcrypto -lssl 
 
 run:
-	./main 2 5
+	./main 2 3
 
 val:
-	valgrind --leak-check=yes ./main 1
+	valgrind --leak-check=yes ./main 2 3
 
 clean:
 	rm *.o
