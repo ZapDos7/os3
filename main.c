@@ -8,7 +8,6 @@
 #include <signal.h>
 #include <time.h>
 
-
 #include "shm.h"
 #include "Semun.h"
 #include "help.h"
@@ -41,6 +40,20 @@ int main (int argc, char*argv[]) {
         fprintf(stderr, "Can't find input file file!\n");
 		exit(-1);
     }
+    fprintf(stdout, "Given numbers:\nP is %d\nK is %d.\n", pnum, k);
+////////////////////file handling////////////////////////
+    if (fptr) {
+        fseek(fptr, 0, SEEK_END);
+        long fsize = ftell(fptr);
+        fseek(fptr, 0, SEEK_SET);
+
+        char *buffer = malloc(fsize + 1);
+        if (buffer) {
+            /*fsize =*/ fread(buffer, 1, fsize, fptr);
+        }
+        fclose(fptr);
+    }
+    //file contents in buffer so after fork all P's will have that, not very good memorywise but it's faster than N* read and write
 ///////////////create shared memory//////////////////////
     int shm_id, shm_key;
     if ((shm_key = ftok("main.c", 'O')) == -1) {//lab
@@ -50,31 +63,13 @@ int main (int argc, char*argv[]) {
 	shm_id = shm_create(shm_key, pnum);
 ///////////////////handle semaphores/////////////////////
     int sem_key = rand(); //yolo
-    //in-ds
+
     int fullin=sem_create(sem_key,1,0); //initially empty
-    int emptyin=sem_create(sem_key,1,1);
-    //out-ds me ton C na einai producer kai oi P oi consumers
+    int emptyin=sem_create(sem_key,1,1); //in-ds
+
     int fullout=sem_create(sem_key,1,0); //initially empty
-    int emptyout=sem_create(sem_key,1,1);
+    int emptyout=sem_create(sem_key,1,1); //out-ds me ton C na einai producer kai oi P oi consumers
     //we dont need mutexes afou queue length = 1 message
-/////////////////////counters////////////////////////////
-    int ppcount=0;//posa tupwthikan apo to idio P, pollapla instances in each P?
-    //else pinaka of ppcount in shared memory where saved the instances
-    //else 1 int in shared memory where sum the instances
-//////////////////md5 stuff//////////////////////////////
-    /*
-    unsigned char digest[MD5_DIGEST_LENGTH]; //resulting hash, length=16 predefined
-    char string[] = "happy go lucky o so happy and lucky";
-    MD5((unsigned char*)&string, strlen(string), (unsigned char*)&digest);    
-
-    char mdString[33];
-
-    for(int i = 0; i < 16; i++)
-         sprintf(&mdString[i*2], "%02x", (unsigned int)digest[i]);
-
-    printf("md5 digest: %s\n", mdString);
-*/
-
 //////////////////////fork time//////////////////////////
     int pid;
     for (int i = 0; i < pnum; i++) {
@@ -90,7 +85,9 @@ int main (int argc, char*argv[]) {
             //the C: read & hash
             //send back to out-ds
             //inform children that it is all over, k is done
-            //read all ppcounter, sum & print
+            int sumppcount=0;
+            //read all ppcounter[], sum & print
+            fprintf(stdout, "Finished execution, %d times the printed message was from the same process ID.\n", sumppcount);
             //kill children
         }
 /////////////////////////P///////////////////////////////
@@ -98,6 +95,12 @@ int main (int argc, char*argv[]) {
             printf("My id is %d. I am child. P%d\n", getpid(), i);
             msgin * shm_ptr; //init shared memory of msg size
             shm_ptr = shm_attachin(shm_id); //attach to shared memory
+            srand(getpid());
+            int ppcount=0; //counter ana P
+            /*if (buffer) {
+
+            }*/
+            //rand()%lines of text file
             while (1) {
                 //the N Ps: read file
                 //send struct into in-ds
@@ -110,6 +113,7 @@ int main (int argc, char*argv[]) {
             }
             
         }
+
         else {//useless else but you can never know with these magic stuff!
             fprintf(stderr, "How and why\n");
             exit(-1);
@@ -117,8 +121,20 @@ int main (int argc, char*argv[]) {
     }
     
 ////////////////////////end//////////////////////////////    
-    //print finishing message
-    fprintf(stdout, "Given numbers:\nP is %d\nK is %d.\n", pnum, k);
-    fprintf(stdout, "Finished execution, %d times the printed message was from the same process ID.\n", ppcount);
     exit(0);
 }
+
+
+//////////////////md5 stuff//////////////////////////////
+    /*
+    unsigned char digest[MD5_DIGEST_LENGTH]; //resulting hash, length=16 predefined
+    char string[] = "happy go lucky o so happy and lucky";
+    MD5((unsigned char*)&string, strlen(string), (unsigned char*)&digest);    
+
+    char mdString[33];
+
+    for(int i = 0; i < 16; i++)
+         sprintf(&mdString[i*2], "%02x", (unsigned int)digest[i]);
+
+    printf("md5 digest: %s\n", mdString);
+*/
