@@ -128,18 +128,23 @@ int main (int argc, char*argv[]) {
                         tmp->hash = shm_ptr_out->hash; //auto to tupwnw always!
                     sem_up(emptyout, 1);
 
-                    //print stuff aka the hash of out-ds message and check for PID match
-                    fprintf(stdout, "I received this hash is 0x%x. ", (tmp->hash/* && 0xff*/));
-                    if (tmp->pid==getpid()) {
+                    //check it poison!
+                    if (tmp->pid==-1) {
+                        //steile to ppcount sto shared memory!
+                        exit(0);
+                    }
+                    else if (tmp->pid==getpid()) {//print stuff aka the hash of out-ds message and check for PID match
                         ppcount++;//if idio Ppid = Ppid: ppcounter++;
+                        fprintf(stdout, "I received this hash is 0x%x. ", (tmp->hash/* && 0xff*/));
                         fprintf(stdout, "I got back my own message hashed, my pid is %d.\n", getpid());
                     }//Ps print: hash, my pid, and if !=, pid_original
                     else {
+                        fprintf(stdout, "I received this hash is 0x%x. ", (tmp->hash/* && 0xff*/));
                         fprintf(stdout, "I got back another's message, tmp pid=%d, my pid = %d.\n", tmp->pid, getpid());
                     }
                     free(ptemp);
+                    free(tmp);
                 }
-                //send ppcounter to shared memory?
             }
 //////////////////////C//////////////////////////////////
             else { //i==pnum ara o C einai o "last"
@@ -156,7 +161,7 @@ int main (int argc, char*argv[]) {
                 shm_ptr_out = shm_attachout(shm_id);
 
                 //the C: read & hash
-                while(k!=0) {//if K times
+                while(kcount!=0) {//if K times
                     sem_down(fullin, 1);
                         memcpy(tmp, shm_ptr_in,sizeof(msgin)); //correct? probably not!!
                         tmp->pid = shm_ptr_in->pid;
@@ -176,13 +181,34 @@ int main (int argc, char*argv[]) {
                         shm_ptr_out->pid = tmp->pid; //dont alter the pid
                         shm_ptr_out->hash = ctemp;
                     sem_up(fullout, 1);
-                    k--;
+                    kcount--;
                 }
-                for (int q = 0; q < pnum; q++) { //inform children that it is all over
-                    //first do pnum reads
-                    //give out pnum struct of type {pid=-1, hash=whatever}
-                    //so that each P knows it is over
+                if(kcount==0) {
+                    for (int q = 0; q < pnum; q++) { //inform children that it is all over
+                        //first do pnum reads
+                        sem_down(fullin, 1);
+                            //dummy read so that another P can write in
+                            memcpy(tmp, shm_ptr_in,sizeof(msgin)); //correct? probably not!!
+                            tmp->pid = shm_ptr_in->pid;
+                            strcpy(tmp->line, shm_ptr_in->line);
+                        sem_up(emptyin, 1);
+                        //now i poison
+                        //give out pnum struct of type {pid=-1, hash=whatever}
+                        sem_down(emptyout, 1);
+                            //write
+                            shm_ptr_out->pid = -1;//so that each P knows it is over
+                            shm_ptr_out->hash = getpid(); //doesn't matter
+                        sem_up(fullout, 1);
+                        //I do the sum
+                        //I send the sum to Parent?
+                    }
                 }
+                else {
+                    fprintf(stderr, "Oh no how did you do this.\n");
+                    exit(-1);
+                }
+                free(tmp);
+                //ctemp is int -> cant be freed
             }
         }
         else {
