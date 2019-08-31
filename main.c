@@ -47,7 +47,7 @@ int main (int argc, char*argv[]) {
 	    exit(-1);
 	}
 	shm_id = shm_create(shm_key, pnum);
-///////////////////handle semaphores/////////////////////
+///////////////////initi semaphores//////////////////////
     int sem_key = rand(); //yolo
 
     int fullin=sem_create(sem_key,1,0); //initially empty
@@ -69,7 +69,7 @@ int main (int argc, char*argv[]) {
             //kill kids
        }
         else if (pid==0) {
-            if (i!=0) {
+            if (i!=pnum) {
                 printf("My id is %d. I am child. P%d\n", getpid(), i);
                 //while (1) {
                 ////////////////////file handling////////////////////////
@@ -119,7 +119,7 @@ int main (int argc, char*argv[]) {
                     free(ptemp);
                 //}
             }
-            else { //i==0
+            else { //i==pnum ara o C einai o "last"
                 printf("My id is %d. Child. I am C.\n", getpid());
                 int sumppcount=0;
                 msgin * shm_ptr;
@@ -160,9 +160,11 @@ int main (int argc, char*argv[]) {
     
             }
         }
+        else {
+            fprintf(stderr, "How and why?\n");
+            exit(-1);
+        }
     }
-    
-
 ////////////////////////end//////////////////////////////    
     exit(0);
 }
