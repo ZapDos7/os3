@@ -75,30 +75,30 @@ int main (int argc, char*argv[]) {
 //////////////////////Ps/////////////////////////////////
             if (i!=pnum) {
                 printf("My id is %d. I am child. P%d\n", getpid(), i);
-                //while (1) {
-                ////////////////////file handling////////////////////////
-                int num_of_file_lines=0;
-                char chr;
-                chr = getc(fptr);
-                while (chr != EOF) {
-                    if (chr == '\n') {
-                        num_of_file_lines++;
-                    }
+                while (1) {
+                    ////////////////////file handling////////////////////////
+                    int num_of_file_lines=0;
+                    char chr;
                     chr = getc(fptr);
-                }
-                fprintf(stderr, "Num of lines in text file = %d\n", num_of_file_lines);
-                fseek(fptr, 0, SEEK_SET); //rewind
-                //now put in lines
-                char buffer[num_of_file_lines+1][1024];
-                char temp[1024]; //bad practice!
-                int i=0;
-                while (fgets(temp, sizeof(temp), fptr)!=NULL) {
-                    //fprintf(stderr, "%s\n", temp);
-                    strcpy(buffer[i], temp);
-                    i++;
-                    //fprintf(stderr, "\n%d\n", i);
-                }
-                fclose(fptr);
+                    while (chr != EOF) {
+                        if (chr == '\n') {
+                            num_of_file_lines++;
+                        }
+                        chr = getc(fptr);
+                    }
+                    fprintf(stderr, "Num of lines in text file = %d\n", num_of_file_lines);
+                    fseek(fptr, 0, SEEK_SET); //rewind
+                    //now put in lines
+                    char buffer[num_of_file_lines+1][1024];
+                    char temp[1024]; //bad practice!
+                    int i=0;
+                    while (fgets(temp, sizeof(temp), fptr)!=NULL) {
+                        //fprintf(stderr, "%s\n", temp);
+                        strcpy(buffer[i], temp);
+                        i++;
+                        //fprintf(stderr, "\n%d\n", i);
+                    }
+                    fclose(fptr);
                     srand(getpid()); //so each P has different seed
                     int ppcount=0; //counter ana P
                     int temp_line = rand()%num_of_file_lines; //rand()%lines of text file
@@ -113,7 +113,7 @@ int main (int argc, char*argv[]) {
                         shm_ptr_in->pid = getpid();
                         strcpy(shm_ptr_in->line, ptemp);
                     sem_up(fullin, 1);
-                    
+                        
                     //WAIT - semaphore stuff - while i have sent a message, i wait
                     //when i get one back i send the next
                     msgout * shm_ptr_out; //struct {pid + int}
@@ -138,7 +138,7 @@ int main (int argc, char*argv[]) {
                         fprintf(stdout, "I got back another's message, tmp pid=%d, my pid = %d.\n", tmp->pid, getpid());
                     }
                     free(ptemp);
-                //}
+                }
                 //send ppcounter to shared memory?
             }
 //////////////////////C//////////////////////////////////
