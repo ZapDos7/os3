@@ -10,7 +10,6 @@
 
 #include "shm.h"
 #include "Semun.h"
-#include "help.h"
 
 int main (int argc, char*argv[]) {
 /////////////////////////////initialize//////////////////
@@ -107,48 +106,61 @@ int main (int argc, char*argv[]) {
                     ptemp = malloc(1024);
                     strcpy(ptemp, buffer[temp_line]);
                     //send struct into in-ds
-                    msgin * shm_ptr; //init shared memory of msg size
-                    shm_ptr = shm_attachin(shm_id); //attach to shared memory
-                    shm_ptr = malloc(sizeof(msgin));
+                    msgin * shm_ptr_in; //init shared memory of msg size
+                    shm_ptr_in = shm_attachin(shm_id); //attach to shared memory
+                    shm_ptr_in = malloc(sizeof(msgin));
                     sem_down(emptyin, 1);
-                        shm_ptr->pid = getpid();
-                        strcpy(shm_ptr->line, ptemp);
+                        shm_ptr_in->pid = getpid();
+                        strcpy(shm_ptr_in->line, ptemp);
                     sem_up(fullin, 1);
                     
                     //WAIT - semaphore stuff - while i have sent a message, i wait
-
-
-                    
                     //when i get one back i send the next
-                    //read if out-ds is readable
-                    //print stuff aka the hash of out-ds message and check for PID match
-                    //if idio Ppid = Ppid: ppcounter++;
-                    //send ppcounter to shared memory?
+                    msgout * shm_ptr_out; //struct {pid + int}
+                    shm_ptr_out = shm_attachout(shm_id);
+                    shm_ptr_out = malloc(sizeof(msgout));
+                    msgout * tmp;
+                    tmp = malloc(sizeof(msgout));
+                    //Ps are the consumers now!
+                    sem_down(fullout, 1);//read if out-ds is readable
+                        memcpy(tmp,shm_ptr_out, sizeof(msgin));
+                        tmp->pid = shm_ptr_out->pid; //auto 8a tsekarw an einai idio me to diko m
+                        tmp->hash = shm_ptr_out->hash; //auto to tupwnw always!
+                    sem_up(emptyout, 1);
 
-                    //Ps print: hash, my pid, and if !=, pid_original
+                    //print stuff aka the hash of out-ds message and check for PID match
+                    fprintf(stdout, "I received this hash is 0x%x. ", (tmp->hash/* && 0xff*/));
+                    if (tmp->pid==getpid()) {
+                        ppcount++;//if idio Ppid = Ppid: ppcounter++;
+                        fprintf(stdout, "I got back my own message hashed, my pid is %d.\n", getpid());
+                    }//Ps print: hash, my pid, and if !=, pid_original
+                    else {
+                        fprintf(stdout, "I got back another's message, tmp pid=%d, my pid = %d.\n", tmp->pid, getpid());
+                    }
                     free(ptemp);
                 //}
+                //send ppcounter to shared memory?
             }
 //////////////////////C//////////////////////////////////
             else { //i==pnum ara o C einai o "last"
                 printf("My id is %d. Child. I am C.\n", getpid());
                 int kcount=k; //k--
-                msgin * shm_ptr;
-                shm_ptr = shm_attachin(shm_id);
+                msgin * shm_ptr_in;
+                shm_ptr_in = shm_attachin(shm_id);
                 int ctemp; //edw 8a balw to hash
                 msgin * tmp;
                 tmp = malloc(sizeof(msgin));
                 unsigned char digest[MD5_DIGEST_LENGTH]; //resulting hash, length=16 predefined
                 char mdString[33];
-                msgout * shm_ptr2;
-                shm_ptr2 = shm_attachout(shm_id);
+                msgout * shm_ptr_out;
+                shm_ptr_out = shm_attachout(shm_id);
 
                 //the C: read & hash
                 while(k!=0) {//if K times
                     sem_down(fullin, 1);
-                        memcpy(tmp, shm_ptr,sizeof(msgin)); //correct? probably not!!
-                        tmp->pid = shm_ptr->pid;
-                        strcpy(tmp->line, shm_ptr->line);
+                        memcpy(tmp, shm_ptr_in,sizeof(msgin)); //correct? probably not!!
+                        tmp->pid = shm_ptr_in->pid;
+                        strcpy(tmp->line, shm_ptr_in->line);
                     sem_up(emptyin, 1);
                     /////////////////////////////////////md5//////////////////
                     MD5((unsigned char*)&tmp->line, strlen(tmp->line), (unsigned char*)&digest);    
@@ -158,11 +170,11 @@ int main (int argc, char*argv[]) {
                     //printf("md5 digest: %s\n", mdString);
                     ctemp=atoi(mdString);
                     //now C is producer, send back to out-ds
-                    shm_ptr2 = malloc(sizeof(msgout));
+                    shm_ptr_out = malloc(sizeof(msgout));
                     sem_down(emptyout, 1);
                         //write
-                        shm_ptr2->pid = tmp->pid; //dont alter the pid
-                        shm_ptr2->hash = ctemp;
+                        shm_ptr_out->pid = tmp->pid; //dont alter the pid
+                        shm_ptr_out->hash = ctemp;
                     sem_up(fullout, 1);
                     k--;
                 }
