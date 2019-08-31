@@ -57,6 +57,7 @@ int main (int argc, char*argv[]) {
     //we dont need mutexes afou queue length = 1 message
 //////////////////////fork time//////////////////////////
     int pid;
+    int status;
     for (int i = 0; i < pnum; i++) {
         pid = fork();//fork
         if (pid == -1) {
@@ -65,11 +66,12 @@ int main (int argc, char*argv[]) {
         }
 //////////////////////Parent/////////////////////////////
         else if (pid!=0) {
-            //parent controls all but does not much
+            wait(&status);
             //read all ppcounter[], sum & print
             int sumppcount=0;
+            shm_delete(shm_id); //check
             fprintf(stdout, "Finished execution with %d P processes and %d repetitions, %d times the printed message was from the same process ID.\n", pnum, k, sumppcount);
-            //kill children
+            kill(pid, SIGKILL); //kill children
        }
         else if (pid==0) {
 //////////////////////Ps/////////////////////////////////
@@ -117,13 +119,13 @@ int main (int argc, char*argv[]) {
                     //WAIT - semaphore stuff - while i have sent a message, i wait
                     //when i get one back i send the next
                     msgout * shm_ptr_out; //struct {pid + int}
-                    shm_ptr_out = shm_attachout(shm_id);
+                    shm_ptr_out = shm_attachout(shm_id+sizeof(msgin));
                     shm_ptr_out = malloc(sizeof(msgout));
                     msgout * tmp;
                     tmp = malloc(sizeof(msgout));
                     //Ps are the consumers now!
                     sem_down(fullout, 1);//read if out-ds is readable
-                        memcpy(tmp,shm_ptr_out, sizeof(msgin));
+                        //memcpy(tmp,shm_ptr_out, sizeof(msgin));
                         tmp->pid = shm_ptr_out->pid; //auto 8a tsekarw an einai idio me to diko m
                         tmp->hash = shm_ptr_out->hash; //auto to tupwnw always!
                     sem_up(emptyout, 1);
@@ -142,6 +144,8 @@ int main (int argc, char*argv[]) {
                         fprintf(stdout, "I received this hash is 0x%x. ", (tmp->hash/* && 0xff*/));
                         fprintf(stdout, "I got back another's message, tmp pid=%d, my pid = %d.\n", tmp->pid, getpid());
                     }
+                    shm_detachin(shm_ptr_in);
+                    shm_detachout(shm_ptr_out);
                     free(ptemp);
                     free(tmp);
                 }
@@ -158,12 +162,12 @@ int main (int argc, char*argv[]) {
                 unsigned char digest[MD5_DIGEST_LENGTH]; //resulting hash, length=16 predefined
                 char mdString[33];
                 msgout * shm_ptr_out;
-                shm_ptr_out = shm_attachout(shm_id);
+                shm_ptr_out = shm_attachout(shm_id+sizeof(msgin));
 
                 //the C: read & hash
                 while(kcount!=0) {//if K times
                     sem_down(fullin, 1);
-                        memcpy(tmp, shm_ptr_in,sizeof(msgin)); //correct? probably not!!
+                        //memcpy(tmp, shm_ptr_in,sizeof(msgin)); //correct? probably not!!
                         tmp->pid = shm_ptr_in->pid;
                         strcpy(tmp->line, shm_ptr_in->line);
                     sem_up(emptyin, 1);
@@ -188,7 +192,7 @@ int main (int argc, char*argv[]) {
                         //first do pnum reads
                         sem_down(fullin, 1);
                             //dummy read so that another P can write in
-                            memcpy(tmp, shm_ptr_in,sizeof(msgin)); //correct? probably not!!
+                            //memcpy(tmp, shm_ptr_in,sizeof(msgin)); //correct? probably not!!
                             tmp->pid = shm_ptr_in->pid;
                             strcpy(tmp->line, shm_ptr_in->line);
                         sem_up(emptyin, 1);
@@ -197,7 +201,7 @@ int main (int argc, char*argv[]) {
                         sem_down(emptyout, 1);
                             //write
                             shm_ptr_out->pid = -1;//so that each P knows it is over
-                            shm_ptr_out->hash = getpid(); //doesn't matter
+                            shm_ptr_out->hash = getpid(); //doesn't matter but it's an int
                         sem_up(fullout, 1);
                         //I do the sum
                         //I send the sum to Parent?
@@ -207,6 +211,9 @@ int main (int argc, char*argv[]) {
                     fprintf(stderr, "Oh no how did you do this.\n");
                     exit(-1);
                 }
+                shm_detachin(shm_ptr_in);
+                shm_detachout(shm_ptr_out);
+                //shm_delete(shm_id); //is this enough? does parent do this?
                 free(tmp);
                 //ctemp is int -> cant be freed
             }
