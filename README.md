@@ -1,5 +1,13 @@
 # Πρόβλημα Producers – Consumers με πολλαπλούς Producers και έναν Consumer
 
+<h2> Ζαπαλίδη Ιωάννα <br></h2>
+
+_1115201400044_ 
+
+<p align="center">
+  <img src="./img/md5.jpg">
+</p>
+
 _Περιεχόμενα_
 
 1. Δομή &amp; Ανάπτυξη Κώδικα
