@@ -64,11 +64,13 @@ int main (int argc, char*argv[]) {
 			fprintf(stderr, "Error! Fork failure.\n");
 			exit(-1);
         }
+//////////////////////Parent////////////////////////////
         else if (pid!=0) {
             //parent controls all but does not much
             //kill kids
        }
         else if (pid==0) {
+//////////////////////Ps////////////////////////////////
             if (i!=pnum) {
                 printf("My id is %d. I am child. P%d\n", getpid(), i);
                 //while (1) {
@@ -119,6 +121,7 @@ int main (int argc, char*argv[]) {
                     free(ptemp);
                 //}
             }
+//////////////////////C/////////////////////////////////
             else { //i==pnum ara o C einai o "last"
                 printf("My id is %d. Child. I am C.\n", getpid());
                 int sumppcount=0;
