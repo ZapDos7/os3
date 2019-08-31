@@ -13,7 +13,7 @@
 #include "help.h"
 
 int main (int argc, char*argv[]) {
-///////////////initialize//////////////
+/////////////////////////////initialize//////////////////
     //printf("1st arguement is number of P processes, 2nd arguement is number of repetitions. Default values: Pnum = , k = .\n");
     int pnum, k;
     FILE * fptr;
@@ -64,13 +64,16 @@ int main (int argc, char*argv[]) {
 			fprintf(stderr, "Error! Fork failure.\n");
 			exit(-1);
         }
-//////////////////////Parent////////////////////////////
+//////////////////////Parent/////////////////////////////
         else if (pid!=0) {
             //parent controls all but does not much
-            //kill kids
+            //read all ppcounter[], sum & print
+            int sumppcount=0;
+            fprintf(stdout, "Finished execution with %d P processes and %d repetitions, %d times the printed message was from the same process ID.\n", pnum, k, sumppcount);
+            //kill children
        }
         else if (pid==0) {
-//////////////////////Ps////////////////////////////////
+//////////////////////Ps/////////////////////////////////
             if (i!=pnum) {
                 printf("My id is %d. I am child. P%d\n", getpid(), i);
                 //while (1) {
@@ -113,54 +116,61 @@ int main (int argc, char*argv[]) {
                     sem_up(fullin, 1);
                     
                     //WAIT - semaphore stuff - while i have sent a message, i wait
+
+
+                    
                     //when i get one back i send the next
                     //read if out-ds is readable
                     //print stuff aka the hash of out-ds message and check for PID match
                     //if idio Ppid = Ppid: ppcounter++;
                     //send ppcounter to shared memory?
+
+                    //Ps print: hash, my pid, and if !=, pid_original
                     free(ptemp);
                 //}
             }
-//////////////////////C/////////////////////////////////
+//////////////////////C//////////////////////////////////
             else { //i==pnum ara o C einai o "last"
                 printf("My id is %d. Child. I am C.\n", getpid());
-                int sumppcount=0;
+                int kcount=k; //k--
                 msgin * shm_ptr;
                 shm_ptr = shm_attachin(shm_id);
                 int ctemp; //edw 8a balw to hash
                 msgin * tmp;
                 tmp = malloc(sizeof(msgin));
-                //the C: read & hash
-                sem_down(fullin, 1);
-                    memcpy(tmp, shm_ptr,sizeof(msgin)); //correct? probably not!!
-                    tmp->pid = shm_ptr->pid;
-                    strcpy(tmp->line, shm_ptr->line);
-                sem_up(emptyin, 1);
-                /////////////////////////////////////md5//////////////////
                 unsigned char digest[MD5_DIGEST_LENGTH]; //resulting hash, length=16 predefined
-                MD5((unsigned char*)&tmp->line, strlen(tmp->line), (unsigned char*)&digest);    
                 char mdString[33];
-                for(int i = 0; i < 16; i++) {
-                    sprintf(&mdString[i*2], "%02x", (unsigned int)digest[i]);
-                }
-                printf("md5 digest: %s\n", mdString);
-                ctemp=atoi(mdString);
-            
-                //now C is producer
                 msgout * shm_ptr2;
                 shm_ptr2 = shm_attachout(shm_id);
-                sem_down(emptyout, 1);
-                    //write
+
+                //the C: read & hash
+                while(k!=0) {//if K times
+                    sem_down(fullin, 1);
+                        memcpy(tmp, shm_ptr,sizeof(msgin)); //correct? probably not!!
+                        tmp->pid = shm_ptr->pid;
+                        strcpy(tmp->line, shm_ptr->line);
+                    sem_up(emptyin, 1);
+                    /////////////////////////////////////md5//////////////////
+                    MD5((unsigned char*)&tmp->line, strlen(tmp->line), (unsigned char*)&digest);    
+                    for(int i = 0; i < 16; i++) {
+                        sprintf(&mdString[i*2], "%02x", (unsigned int)digest[i]);
+                    }
+                    //printf("md5 digest: %s\n", mdString);
+                    ctemp=atoi(mdString);
+                    //now C is producer, send back to out-ds
+                    shm_ptr2 = malloc(sizeof(msgout));
+                    sem_down(emptyout, 1);
+                        //write
+                        shm_ptr2->pid = tmp->pid; //dont alter the pid
+                        shm_ptr2->hash = ctemp;
                     sem_up(fullout, 1);
-
-
-                    //send back to out-ds
-                    //if K times
-                    //inform children that it is all over, k is done - signal?
-                    //read all ppcounter[], sum & print
-                    fprintf(stdout, "Finished execution with %d P processes and %d repetitions, %d times the printed message was from the same process ID.\n", pnum, k, sumppcount);
-                    //kill children
-    
+                    k--;
+                }
+                for (int q = 0; q < pnum; q++) { //inform children that it is all over
+                    //first do pnum reads
+                    //give out pnum struct of type {pid=-1, hash=whatever}
+                    //so that each P knows it is over
+                }
             }
         }
         else {
