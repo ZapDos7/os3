@@ -72,6 +72,7 @@ int main (int argc, char*argv[]) {
             shm_delete(shm_id); //check
             fprintf(stdout, "Finished execution with %d P processes and %d repetitions, %d times the printed message was from the same process ID.\n", pnum, k, sumppcount);
             kill(pid, SIGKILL); //kill children
+            fclose(fptr);
        }
         else if (pid==0) {
 //////////////////////Ps/////////////////////////////////
@@ -100,7 +101,6 @@ int main (int argc, char*argv[]) {
                         i++;
                         //fprintf(stderr, "\n%d\n", i);
                     }
-                    fclose(fptr);
                     srand(getpid()); //so each P has different seed
                     int ppcount=0; //counter ana P
                     int temp_line = rand()%num_of_file_lines; //rand()%lines of text file

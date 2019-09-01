@@ -26,4 +26,8 @@ msgout* shm_attachout(int shm_id);
 int shm_detachout(msgout * shm_ptr);
 int shm_delete(int shm_id);
 
+//final shm part is int[num of Ps] for summing of counters
+int * shm_attach_c(int shm_id);
+int shm_detach_c(int * counters);
+
 #endif

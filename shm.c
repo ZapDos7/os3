@@ -13,7 +13,7 @@ int shm_detachin(msgin * shm_ptr) {
 }
 //out attach && detach
 msgout* shm_attachout(int shm_id) {
-    return shmat(shm_id, NULL, 0);
+    return shmat(shm_id, (void*)sizeof(msgin), 0);
 }
 int shm_detachout(msgout * shm_ptr) {
     return shmdt(shm_ptr);
@@ -21,6 +21,14 @@ int shm_detachout(msgout * shm_ptr) {
 //delete
 int shm_delete(int shm_id) {
     return shmctl(shm_id, IPC_RMID, 0);
+}
+
+int * shm_attach_c(int shm_id) {
+    return shmat(shm_id, (void*)sizeof(msgin)+sizeof(msgout), 0);
+}
+
+int shm_detach_c(int * shm_ptr) {
+    return shmdt(shm_ptr);
 }
 
 /*
