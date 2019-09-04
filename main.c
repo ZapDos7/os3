@@ -15,6 +15,7 @@ int main (int argc, char*argv[]) {
 /////////////////////////////initialize//////////////////
     //printf("1st arguement is number of P processes, 2nd arguement is number of repetitions. Default values: Pnum = , k = .\n");
     int pnum, k;
+    int sumppcount=0;
     FILE * fptr;
     if ((argc>4)||(argc==2)) {
         fprintf(stderr, "Incorrect amount of arguements, please fix this issue and start again.\n");
@@ -68,10 +69,16 @@ int main (int argc, char*argv[]) {
         else if (pid!=0) {
             wait(&status);
             //read all ppcounter[], sum & print
-            int sumppcount=0;
+            int * arrpps;
+            //arrpps = shm_attach_c(shm_id+sizeof(msgin)+sizeof(msgout));
+            arrpps = shm_attach_c(shm_id);
+            arrpps = malloc(sizeof(int)*pnum);
+            for (int w = 0; w < pnum; w++) {
+                sumppcount+=arrpps[w];
+            }
             shm_delete(shm_id); //check
-            fprintf(stdout, "Finished execution with %d P processes and %d repetitions, %d times the printed message was from the same process ID.\n", pnum, k, sumppcount);
             kill(pid, SIGKILL); //kill children
+            free(arrpps);
             fclose(fptr);
        }
         else if (pid==0) {
@@ -95,6 +102,7 @@ int main (int argc, char*argv[]) {
                     char buffer[num_of_file_lines+1][1024];
                     char temp[1024]; //bad practice!
                     int i=0;
+                    //re-read doesn't work
                     while (fgets(temp, sizeof(temp), fptr)!=NULL) {
                         //fprintf(stderr, "%s\n", temp);
                         strcpy(buffer[i], temp);
@@ -105,7 +113,7 @@ int main (int argc, char*argv[]) {
                     int ppcount=0; //counter ana P
                     int temp_line = rand()%num_of_file_lines; //rand()%lines of text file
                     char * ptemp=NULL;
-                    ptemp = malloc(1024);
+                    ptemp = malloc(1024); //this can't be right
                     strcpy(ptemp, buffer[temp_line]);
                     //send struct into in-ds
                     msgin * shm_ptr_in; //init shared memory of msg size
@@ -118,8 +126,11 @@ int main (int argc, char*argv[]) {
                         
                     //WAIT - semaphore stuff - while i have sent a message, i wait
                     //when i get one back i send the next
+
+
                     msgout * shm_ptr_out; //struct {pid + int}
-                    shm_ptr_out = shm_attachout(shm_id+sizeof(msgin));
+//                    shm_ptr_out = shm_attachout(shm_id+sizeof(msgin));
+                    shm_ptr_out = shm_attachout(shm_id);
                     shm_ptr_out = malloc(sizeof(msgout));
                     msgout * tmp;
                     tmp = malloc(sizeof(msgout));
@@ -127,27 +138,35 @@ int main (int argc, char*argv[]) {
                     sem_down(fullout, 1);//read if out-ds is readable
                         //memcpy(tmp,shm_ptr_out, sizeof(msgin));
                         tmp->pid = shm_ptr_out->pid; //auto 8a tsekarw an einai idio me to diko m
-                        tmp->hash = shm_ptr_out->hash; //auto to tupwnw always!
+                        //tmp->hash = shm_ptr_out->hash; //auto to tupwnw always!
+                        strcpy(tmp->hash, shm_ptr_out->hash);
                     sem_up(emptyout, 1);
-
-                    //check it poison!
-                    if (tmp->pid==-1) {
+//this never assigns value to tmp->pid
+                    //check if poison!
+                    if (tmp->pid==-1) {//uninitialised values?
                         //steile to ppcount sto shared memory!
+                        int *array_mycount;
+//                        array_mycount = shm_attach_c(shm_id+sizeof(msgin)+sizeof(msgout));
+                        array_mycount = shm_attach_c(shm_id);
+                        array_mycount[pnum%getpid()] = ppcount; //is this working idk :)
                         exit(0);
                     }
                     else if (tmp->pid==getpid()) {//print stuff aka the hash of out-ds message and check for PID match
                         ppcount++;//if idio Ppid = Ppid: ppcounter++;
-                        fprintf(stdout, "I received this hash is 0x%x. ", (tmp->hash/* && 0xff*/));
+                        fprintf(stdout, "I received this hash is 0x%s. ", (tmp->hash/* && 0xff*/));
                         fprintf(stdout, "I got back my own message hashed, my pid is %d.\n", getpid());
                     }//Ps print: hash, my pid, and if !=, pid_original
                     else {
-                        fprintf(stdout, "I received this hash is 0x%x. ", (tmp->hash/* && 0xff*/));
+//tmp doesn't have a value
+                        fprintf(stdout, "I received this hash is 0x%s. ", (tmp->hash/* && 0xff*/));
                         fprintf(stdout, "I got back another's message, tmp pid=%d, my pid = %d.\n", tmp->pid, getpid());
                     }
                     shm_detachin(shm_ptr_in);
                     shm_detachout(shm_ptr_out);
                     free(ptemp);
                     free(tmp);
+                    free(shm_ptr_in);
+                    free(shm_ptr_out);
                 }
             }
 //////////////////////C//////////////////////////////////
@@ -156,13 +175,15 @@ int main (int argc, char*argv[]) {
                 int kcount=k; //k--
                 msgin * shm_ptr_in;
                 shm_ptr_in = shm_attachin(shm_id);
-                int ctemp; //edw 8a balw to hash
+                //int ctemp; //edw 8a balw to hash
+                char ctemp[33];
                 msgin * tmp;
                 tmp = malloc(sizeof(msgin));
                 unsigned char digest[MD5_DIGEST_LENGTH]; //resulting hash, length=16 predefined
                 char mdString[33];
                 msgout * shm_ptr_out;
-                shm_ptr_out = shm_attachout(shm_id+sizeof(msgin));
+//                shm_ptr_out = shm_attachout(shm_id+sizeof(msgin));
+                shm_ptr_out = shm_attachout(shm_id);
 
                 //the C: read & hash
                 while(kcount!=0) {//if K times
@@ -176,14 +197,15 @@ int main (int argc, char*argv[]) {
                     for(int i = 0; i < 16; i++) {
                         sprintf(&mdString[i*2], "%02x", (unsigned int)digest[i]);
                     }
-                    //printf("md5 digest: %s\n", mdString);
-                    ctemp=atoi(mdString);
+                    //ctemp=atoi(mdString);
+                    strcpy(ctemp, mdString);
                     //now C is producer, send back to out-ds
                     shm_ptr_out = malloc(sizeof(msgout));
                     sem_down(emptyout, 1);
                         //write
                         shm_ptr_out->pid = tmp->pid; //dont alter the pid
-                        shm_ptr_out->hash = ctemp;
+                        //shm_ptr_out->hash = ctemp;
+                        strcpy(shm_ptr_out->hash, ctemp);
                     sem_up(fullout, 1);
                     kcount--;
                 }
@@ -201,7 +223,8 @@ int main (int argc, char*argv[]) {
                         sem_down(emptyout, 1);
                             //write
                             shm_ptr_out->pid = -1;//so that each P knows it is over
-                            shm_ptr_out->hash = getpid(); //doesn't matter but it's an int
+                            //shm_ptr_out->hash = getpid(); //doesn't matter but it's an int
+                            strcpy(shm_ptr_out->hash, "It's over.");
                         sem_up(fullout, 1);
                         //I do the sum
                         //I send the sum to Parent?
@@ -215,7 +238,9 @@ int main (int argc, char*argv[]) {
                 shm_detachout(shm_ptr_out);
                 //shm_delete(shm_id); //is this enough? does parent do this?
                 free(tmp);
-                //ctemp is int -> cant be freed
+                //free(ctemp);
+                free(shm_ptr_in);
+                free(shm_ptr_out);
             }
         }
         else {
@@ -224,5 +249,6 @@ int main (int argc, char*argv[]) {
         }
     }
 ////////////////////////end//////////////////////////////    
+    fprintf(stdout, "Finished execution with %d P processes and %d repetitions, %d times the printed message was from the same process ID.\n", pnum, k, sumppcount);
     exit(0);
 }

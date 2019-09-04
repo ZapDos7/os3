@@ -16,7 +16,7 @@ typedef struct msgin { //data structure of shared memory "in-ds"
 
 typedef struct msgout {
 	pid_t pid; //4 bytes
-	int hash; //it's hex of 32 bytes actually + '\0'
+	char hash[33]; //it's hex of 32 bytes actually + '\0'
 } msgout;
 
 int shm_create(key_t keyt, int n);
@@ -28,6 +28,6 @@ int shm_delete(int shm_id);
 
 //final shm part is int[num of Ps] for summing of counters
 int * shm_attach_c(int shm_id);
-int shm_detach_c(int * counters);
+int shm_detach_c(int** counters);
 
 #endif

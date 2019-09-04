@@ -27,7 +27,7 @@ int * shm_attach_c(int shm_id) {
     return shmat(shm_id, (void*)sizeof(msgin)+sizeof(msgout), 0);
 }
 
-int shm_detach_c(int * shm_ptr) {
+int shm_detach_c(int* * shm_ptr) {
     return shmdt(shm_ptr);
 }
 
