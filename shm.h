@@ -19,7 +19,7 @@ typedef struct msgout {
 	char hash[33]; //it's hex of 32 bytes actually + '\0'
 } msgout;
 
-int shm_create(key_t keyt, int n);
+int shm_create(key_t keyt);
 msgin* shm_attachin(int shm_id);
 int shm_detachin(msgin * shm_ptr);
 msgout* shm_attachout(int shm_id);

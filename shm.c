@@ -1,8 +1,8 @@
 #include "shm.h"
 
 //create
-int shm_create(key_t keyt, int n) {
-    return shmget(keyt, sizeof(msgin)+sizeof(msgout)+n*sizeof(int), IPC_CREAT | IPC_EXCL | 0666);
+int shm_create(key_t keyt) {
+    return shmget(keyt, sizeof(msgin)+sizeof(msgout), IPC_CREAT | 0666);
 }
 //in attach && detach
 msgin* shm_attachin(int shm_id) {
